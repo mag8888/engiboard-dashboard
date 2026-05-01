@@ -5,12 +5,16 @@ import {
   RELEASE,
   SPRINTS,
   OUT_OF_SCOPE,
+  MEETINGS,
   computeStats,
   computeSprintStats,
   type Sprint,
   type Task,
   type TaskStatus,
   type OutOfScopeItem,
+  type OosCategory,
+  type SprintUpdate,
+  type UpdateKind,
 } from "@/lib/data";
 import { cn } from "@/lib/utils";
 
@@ -29,6 +33,23 @@ const PRIORITY_META: Record<string, { label: string; cls: string }> = {
   TD: { label: "TD", cls: "bg-violet-500/15 text-violet-300 border-violet-500/30" },
   L: { label: "L", cls: "bg-cyan-500/15 text-cyan-300 border-cyan-500/30" },
   B: { label: "✓", cls: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" },
+};
+
+const CATEGORY_META: Record<OosCategory, { label: string; cls: string }> = {
+  ui: { label: "UI", cls: "bg-blue-500/15 text-blue-300 border-blue-500/30" },
+  ux: { label: "UX", cls: "bg-violet-500/15 text-violet-300 border-violet-500/30" },
+  feature: { label: "FEATURE", cls: "bg-orange-500/15 text-orange-300 border-orange-500/30" },
+  cosmetic: { label: "COSMETIC", cls: "bg-zinc-500/15 text-zinc-300 border-zinc-500/30" },
+  removal: { label: "REMOVAL", cls: "bg-red-500/15 text-red-300 border-red-500/30" },
+};
+
+const UPDATE_META: Record<UpdateKind, { icon: string; color: string }> = {
+  milestone: { icon: "🏁", color: "text-cyan-400" },
+  decision: { icon: "💡", color: "text-violet-400" },
+  blocker: { icon: "🚧", color: "text-red-400" },
+  qa: { icon: "✅", color: "text-emerald-400" },
+  deploy: { icon: "🚀", color: "text-blue-400" },
+  info: { icon: "·", color: "text-zinc-400" },
 };
 
 export default function Dashboard() {
@@ -165,15 +186,57 @@ export default function Dashboard() {
 
         {/* Out-of-scope sidebar */}
         <aside className="space-y-3 lg:sticky lg:top-32 self-start">
+          {/* Sessions card */}
+          {MEETINGS.length > 0 && (
+            <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4">
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <h2 className="font-semibold text-sm">📹 Sessions</h2>
+                  <p className="text-xs text-zinc-500 mt-0.5">Транскрипты разборов</p>
+                </div>
+                <span className="text-[10px] font-mono text-zinc-500">{MEETINGS.length}</span>
+              </div>
+
+              <ul className="space-y-2">
+                {MEETINGS.map((m) => {
+                  const items = oosItems.filter((it) => it.meetingId === m.id);
+                  const inTz = 0; // computed: пока все 7 = вне ТЗ
+                  const outTz = items.length;
+                  return (
+                    <li key={m.id} className="rounded-md border border-[var(--border)] bg-[var(--surface-elevated)] p-2.5">
+                      <div className="flex justify-between gap-2 mb-1">
+                        <span className="text-[11px] font-mono text-zinc-300">{m.id}</span>
+                        <span className="text-[10px] text-zinc-500">{m.date}</span>
+                      </div>
+                      <p className="text-xs font-medium leading-snug mb-1">{m.title}</p>
+                      <p className="text-[10px] text-zinc-500 mb-2">{m.participants.join(" · ")}</p>
+                      <div className="flex gap-1.5 text-[10px] font-mono">
+                        <span className="px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                          {inTz} in ТЗ
+                        </span>
+                        <span className="px-1.5 py-0.5 rounded bg-orange-500/10 text-orange-400 border border-orange-500/20">
+                          {outTz} out-of-ТЗ
+                        </span>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          )}
+
+          {/* Out-of-scope card */}
           <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4">
             <div className="flex items-center justify-between mb-3">
               <div>
-                <h2 className="font-semibold text-sm">Out-of-scope</h2>
-                <p className="text-xs text-zinc-500 mt-0.5">Запросы клиента вне ТЗ</p>
+                <h2 className="font-semibold text-sm">⚠ Out-of-scope</h2>
+                <p className="text-xs text-zinc-500 mt-0.5">
+                  {oosItems.length} запрос{oosItems.length === 1 ? "" : oosItems.length < 5 ? "а" : "ов"} вне ТЗ
+                </p>
               </div>
               <div className="text-right">
                 <div className="text-base font-mono font-semibold text-cyan-400">${totalOosUsd}</div>
-                <div className="text-[10px] text-zinc-500">total</div>
+                <div className="text-[10px] text-zinc-500">total estimate</div>
               </div>
             </div>
 
@@ -200,30 +263,49 @@ export default function Dashboard() {
               </p>
             ) : (
               <ul className="space-y-2">
-                {oosItems.map((item) => (
-                  <li key={item.id} className="rounded-md border border-[var(--border)] bg-[var(--surface-elevated)] p-2.5">
-                    <div className="flex justify-between gap-2 mb-1.5">
-                      <span className="text-[10px] font-mono text-zinc-500">{item.id}</span>
-                      <span className="text-[10px] text-zinc-500">{item.raisedAt}</span>
-                    </div>
-                    <p className="text-xs leading-snug mb-2">{item.title}</p>
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-zinc-500 text-xs">$</span>
-                      <input
-                        type="number"
-                        min="0"
-                        value={item.estimateUsd ?? ""}
-                        onChange={(e) => updateOosEstimate(item.id, e.target.value)}
-                        placeholder="estimate"
-                        className="flex-1 text-xs bg-zinc-900 border border-[var(--border)] rounded px-1.5 py-1 focus:outline-none focus:border-cyan-500/50 font-mono"
-                      />
-                    </div>
-                  </li>
-                ))}
+                {oosItems.map((item) => {
+                  const cat = item.category ? CATEGORY_META[item.category] : null;
+                  return (
+                    <li key={item.id} className="rounded-md border border-[var(--border)] bg-[var(--surface-elevated)] p-2.5">
+                      <div className="flex justify-between gap-2 mb-1.5">
+                        <span className="text-[10px] font-mono text-zinc-500">{item.id}</span>
+                        <span className="text-[10px] text-zinc-500">{item.raisedAt}</span>
+                      </div>
+                      <p className="text-xs leading-snug mb-2">{item.title}</p>
+                      <div className="flex items-center gap-1 mb-2 flex-wrap">
+                        {cat && (
+                          <span className={cn("text-[9px] font-mono uppercase tracking-wide px-1.5 py-0.5 rounded border", cat.cls)}>
+                            {cat.label}
+                          </span>
+                        )}
+                        {item.relatedTzItem && (
+                          <span className="text-[9px] font-mono text-zinc-400 bg-zinc-900 border border-zinc-800 px-1.5 py-0.5 rounded">
+                            → affects {item.relatedTzItem}
+                          </span>
+                        )}
+                        {item.meetingId && (
+                          <span className="text-[9px] font-mono text-zinc-500">{item.meetingId}</span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-zinc-500 text-xs">$</span>
+                        <input
+                          type="number"
+                          min="0"
+                          value={item.estimateUsd ?? ""}
+                          onChange={(e) => updateOosEstimate(item.id, e.target.value)}
+                          placeholder="estimate"
+                          className="flex-1 text-xs bg-zinc-900 border border-[var(--border)] rounded px-1.5 py-1 focus:outline-none focus:border-cyan-500/50 font-mono"
+                        />
+                      </div>
+                    </li>
+                  );
+                })}
               </ul>
             )}
           </div>
 
+          {/* Workflow card */}
           <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 text-xs text-zinc-400 leading-relaxed">
             <p className="text-zinc-200 font-semibold mb-2">📌 Workflow</p>
             <ol className="list-decimal pl-4 space-y-1 text-[11px]">
@@ -309,17 +391,68 @@ function SprintCard({
       </button>
 
       {expanded && (
-        <div className="border-t border-[var(--border)] divide-y divide-[var(--border)]">
-          {sprint.tasks.map((task) => (
-            <TaskRow
-              key={task.id}
-              task={task}
-              expanded={expandedTasks.has(task.id)}
-              onToggle={() => onTaskToggle(task.id)}
-            />
-          ))}
-        </div>
+        <>
+          {sprint.updates && sprint.updates.length > 0 && <SprintUpdatesSection updates={sprint.updates} />}
+          <div className="border-t border-[var(--border)] divide-y divide-[var(--border)]">
+            {sprint.tasks.map((task) => (
+              <TaskRow
+                key={task.id}
+                task={task}
+                expanded={expandedTasks.has(task.id)}
+                onToggle={() => onTaskToggle(task.id)}
+              />
+            ))}
+          </div>
+        </>
       )}
+    </div>
+  );
+}
+
+function SprintUpdatesSection({ updates }: { updates: SprintUpdate[] }) {
+  const [open, setOpen] = useState(false);
+  const sorted = [...updates].sort((a, b) => b.date.localeCompare(a.date));
+  const visible = open ? sorted : sorted.slice(0, 3);
+
+  return (
+    <div className="border-t border-[var(--border)] bg-[var(--surface-elevated)]/40 p-4">
+      <div className="flex items-center justify-between mb-3">
+        <h4 className="text-[11px] uppercase tracking-wide font-semibold text-zinc-400">
+          📊 Updates ({updates.length})
+        </h4>
+        {updates.length > 3 && (
+          <button onClick={() => setOpen(!open)} className="text-[11px] text-cyan-400 hover:text-cyan-300">
+            {open ? "Свернуть" : `Показать все ${updates.length}`}
+          </button>
+        )}
+      </div>
+      <ul className="space-y-2">
+        {visible.map((u) => {
+          const meta = UPDATE_META[u.kind];
+          return (
+            <li key={u.id} className="flex gap-3 text-xs">
+              <span className="text-[10px] font-mono text-zinc-500 w-20 shrink-0 pt-0.5">{u.date}</span>
+              <span className={cn("shrink-0 w-4 text-center text-sm leading-snug", meta.color)} aria-label={u.kind}>
+                {meta.icon}
+              </span>
+              <div className="flex-1 leading-snug text-zinc-200">
+                <span>{u.text}</span>
+                {u.author && <span className="text-zinc-500 ml-1.5 text-[10px]">— {u.author}</span>}
+                {u.prUrl && (
+                  <a
+                    href={u.prUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-cyan-400 hover:text-cyan-300 ml-1.5 text-[10px] font-mono"
+                  >
+                    PR ↗
+                  </a>
+                )}
+              </div>
+            </li>
+          );
+        })}
+      </ul>
     </div>
   );
 }

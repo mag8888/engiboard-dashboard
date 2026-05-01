@@ -13,22 +13,49 @@ export interface Task {
   testProof?: string;
 }
 
+export type UpdateKind = "milestone" | "decision" | "blocker" | "qa" | "deploy" | "info";
+
+export interface SprintUpdate {
+  id: string;
+  date: string;
+  kind: UpdateKind;
+  text: string;
+  author?: string;
+  prUrl?: string;
+}
+
 export interface Sprint {
   id: string;
   name: string;
   versionRange: string;
   status: "done" | "in_progress" | "pending";
   tasks: Task[];
+  updates?: SprintUpdate[];
 }
+
+export type OosCategory = "ui" | "ux" | "feature" | "cosmetic" | "removal";
 
 export interface OutOfScopeItem {
   id: string;
   title: string;
   description?: string;
+  relatedTzItem?: string;
+  category?: OosCategory;
   source: string;
+  meetingId?: string;
   raisedAt: string;
   estimateUsd?: number;
   status: "pending_estimate" | "estimated" | "rejected" | "accepted";
+}
+
+export interface Meeting {
+  id: string;
+  title: string;
+  date: string;
+  participants: string[];
+  summary: string;
+  decisions?: string[];
+  promises?: string[];
 }
 
 export const RELEASE = {
@@ -45,6 +72,21 @@ export const SPRINTS: Sprint[] = [
     name: "Baseline",
     versionRange: "v0.1.0 → v0.1.12",
     status: "done",
+    updates: [
+      { id: "U-S0-01", date: "2026-04-22", kind: "milestone", text: "v0.1.0 — первый релиз: базовый UI + native screencapture -i" },
+      { id: "U-S0-02", date: "2026-04-23", kind: "info", text: "v0.1.1 — screenshot fix: предв. скрытие окон" },
+      { id: "U-S0-03", date: "2026-04-24", kind: "decision", text: "v0.1.3 — отказ от native screencapture: возврат на свой sniper.html overlay (M5+Sequoia)" },
+      { id: "U-S0-04", date: "2026-04-25", kind: "info", text: "v0.1.4 — drag окна через data-tauri-drag-region" },
+      { id: "U-S0-05", date: "2026-04-26", kind: "info", text: "v0.1.5 — Editor on-top с auto-drop через 1с" },
+      { id: "U-S0-06", date: "2026-04-27", kind: "milestone", text: "v0.1.6 — Deep-link OAuth (engiboard://) для Google Sign-in" },
+      { id: "U-S0-07", date: "2026-04-27", kind: "info", text: "v0.1.7 — robust deep-link: runtime register + cold-start handling" },
+      { id: "U-S0-08", date: "2026-04-28", kind: "info", text: "v0.1.8 — editor focus fix" },
+      { id: "U-S0-09", date: "2026-04-28", kind: "info", text: "v0.1.9 — clean titlebar (убраны Tasks/Dashboard кнопки)" },
+      { id: "U-S0-10", date: "2026-04-28", kind: "info", text: "v0.1.10 — per-project inline input для добавления задач" },
+      { id: "U-S0-11", date: "2026-04-29", kind: "info", text: "v0.1.11 — убран project switcher из шапки" },
+      { id: "U-S0-12", date: "2026-04-29", kind: "milestone", text: "v0.1.12 — slideshow ▶ + lightbox с pin-комментариями · SPRINT 0 ЗАКРЫТ" },
+      { id: "U-S0-13", date: "2026-05-01", kind: "decision", text: "Демо-сессия с клиентом: 7 запросов на правки UI/UX → все 7 классифицированы как out-of-ТЗ (см. правую панель)" },
+    ],
     tasks: [
       { id: "B-01", priority: "B", status: "done", title: "Custom sniper.html overlay (transparent fullscreen area selector)" },
       { id: "B-02", priority: "B", status: "done", title: "AppleScript hides EngiBoard before screencapture" },
@@ -258,7 +300,109 @@ export const SPRINTS: Sprint[] = [
   },
 ];
 
-export const OUT_OF_SCOPE: OutOfScopeItem[] = [];
+export const MEETINGS: Meeting[] = [
+  {
+    id: "M-1",
+    title: "Демо-сессия (UI разбор)",
+    date: "2026-05-01",
+    participants: ["Roman", "Anton", "Dmitry"],
+    summary:
+      "Демо десктоп-приложения. Roman показал реализацию, Anton + Dmitry дали развёрнутую обратную связь по UI/UX. 7 запросов на изменение — все вне ТЗ §15.",
+    decisions: [
+      "Чат — слева, не справа",
+      "Функция раскрытия задачи через 'коммент' отменяется — «Ни в коем случае»",
+      "Выбор проектов убирается с постоянного отображения — сворачиваемый",
+      "Поле недели/ID — маленькое, над/под статусом",
+    ],
+    promises: [
+      "Roman: реализую чат в превью-режиме",
+      "Roman: причешу шрифты",
+      "Антон: после подтверждения Дмитрия подготовлю финальную версию договора",
+    ],
+  },
+];
+
+export const OUT_OF_SCOPE: OutOfScopeItem[] = [
+  {
+    id: "OOS-01",
+    title: "Перенести чат с правой стороны на левую",
+    description:
+      "Решение клиента на демо. Текущая реализация (B-16) — чат справа. Требует UI redesign + проверка drag-and-drop совместимости.",
+    relatedTzItem: "B-16",
+    category: "ui",
+    source: "Демо-сессия 2026-05-01 (Anton + Dmitry)",
+    meetingId: "M-1",
+    raisedAt: "2026-05-01",
+    status: "pending_estimate",
+  },
+  {
+    id: "OOS-02",
+    title: "Убрать дублирование имени пользователя (текст + аватар)",
+    description: "Сейчас показывается и текст, и аватар — клиент считает избыточным. UI cleanup.",
+    relatedTzItem: "B-16",
+    category: "ui",
+    source: "Демо-сессия 2026-05-01",
+    meetingId: "M-1",
+    raisedAt: "2026-05-01",
+    status: "pending_estimate",
+  },
+  {
+    id: "OOS-03",
+    title: "Сжать поле статуса + поле недели",
+    description: "Сейчас занимают ~25% экрана. Сделать компактным, разместить над/под статусом.",
+    relatedTzItem: "B-13",
+    category: "ui",
+    source: "Демо-сессия 2026-05-01",
+    meetingId: "M-1",
+    raisedAt: "2026-05-01",
+    status: "pending_estimate",
+  },
+  {
+    id: "OOS-04",
+    title: "Выбор проектов — сворачиваемый, не постоянное отображение",
+    description:
+      "При 20+ проектах постоянный список съедает рабочее пространство. Сворачивать/раскрывать по клику.",
+    relatedTzItem: "B-11",
+    category: "ux",
+    source: "Демо-сессия 2026-05-01",
+    meetingId: "M-1",
+    raisedAt: "2026-05-01",
+    status: "pending_estimate",
+  },
+  {
+    id: "OOS-05",
+    title: "Убрать раскрытие задачи через 'коммент'",
+    description:
+      "Клиент: «Ни в коем случае». Чат только в превью-режиме или при прямом клике. Удаление поведения + рефакторинг.",
+    category: "removal",
+    source: "Демо-сессия 2026-05-01",
+    meetingId: "M-1",
+    raisedAt: "2026-05-01",
+    status: "pending_estimate",
+  },
+  {
+    id: "OOS-06",
+    title: "Реализовать чат в превью-режиме (slideshow)",
+    description:
+      "Превью работает (B-18), но чат в нём не реализован. Roman обещал. Расширяет slideshow + связано с P1-3 Real-time chat.",
+    relatedTzItem: "B-18",
+    category: "feature",
+    source: "Демо-сессия 2026-05-01 — обещание Roman",
+    meetingId: "M-1",
+    raisedAt: "2026-05-01",
+    status: "pending_estimate",
+  },
+  {
+    id: "OOS-07",
+    title: "Привести шрифты в порядок (косметика)",
+    description: "Клиент явно обозначил как cosmetic, не в приоритете. Roman: «Шрифты я причешу».",
+    category: "cosmetic",
+    source: "Демо-сессия 2026-05-01 — обещание Roman",
+    meetingId: "M-1",
+    raisedAt: "2026-05-01",
+    status: "pending_estimate",
+  },
+];
 
 export function computeStats(sprints: Sprint[]) {
   const all = sprints.flatMap((s) => s.tasks);
