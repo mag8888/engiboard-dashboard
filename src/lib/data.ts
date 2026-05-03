@@ -506,6 +506,13 @@ export const SPRINTS: Sprint[] = [
         kind: "milestone",
         text: "🎉 Sprint S6 ЗАКРЫТ — все 6 P2 задач shipped за один autonomy-burst.",
       },
+      {
+        id: "U-S6-08",
+        date: "2026-05-03",
+        kind: "qa",
+        text: "v0.1.24 — QA-агент нашёл 8 critical/major багов в v0.1.13-v0.1.23. Все пофикшены: webhook double-fire, timer 8h idle guard, drop+paste double-add, CSV no-project guard, dark mode status pills + hover regressions, empty-row RU localization, PDF OOM downscaling, reserved combo guard. + 6 bonus fixes.",
+        prUrl: "https://github.com/mag8888/engiboard-desktop/releases/tag/v0.1.24",
+      },
     ],
     tasks: [
       {
