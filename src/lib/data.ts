@@ -441,8 +441,8 @@ export const SPRINTS: Sprint[] = [
   {
     id: "S6",
     name: "Polish (P2)",
-    versionRange: "v0.1.16 → v0.1.20",
-    status: "in_progress",
+    versionRange: "v0.1.16 → v0.1.21",
+    status: "done",
     updates: [
       {
         id: "U-S6-01",
@@ -482,8 +482,15 @@ export const SPRINTS: Sprint[] = [
       {
         id: "U-S6-06",
         date: "2026-05-03",
-        kind: "info",
-        text: "5 / 6 P2 tasks done. Только P2-2 (customizable shortcuts) остался.",
+        kind: "deploy",
+        text: "v0.1.21 — P2-2 Customizable shortcuts (4 editable bindings, capture mode, conflict detect, reset)",
+        prUrl: "https://github.com/mag8888/engiboard-desktop/releases/tag/v0.1.21",
+      },
+      {
+        id: "U-S6-07",
+        date: "2026-05-03",
+        kind: "milestone",
+        text: "🎉 Sprint S6 ЗАКРЫТ — все 6 P2 задач shipped за один autonomy-burst.",
       },
     ],
     tasks: [
@@ -495,7 +502,14 @@ export const SPRINTS: Sprint[] = [
         description: "Profile card с URL input + Save/Test/Clear. Notifications на Done(1)/Problem(5) transitions. CORS fallback на no-cors. Telegram — будущее.",
         prUrl: "https://github.com/mag8888/engiboard-desktop/commit/f085ad0",
       },
-      { id: "P2-2", priority: "P2", status: "pending", title: "Customizable keyboard shortcuts" },
+      {
+        id: "P2-2",
+        priority: "P2",
+        status: "done",
+        title: "Customizable keyboard shortcuts",
+        description: "4 editable bindings (sidebar/search/new task/dark mode) + DEFAULT_SHORTCUTS + matchShortcut() helper + capture mode с ✏️ button + Esc cancel + conflict detect + reset.",
+        prUrl: "https://github.com/mag8888/engiboard-desktop/commit/0097c65",
+      },
       {
         id: "P2-3",
         priority: "P2",
