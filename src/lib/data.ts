@@ -118,8 +118,8 @@ export const SPRINTS: Sprint[] = [
   {
     id: "S0.5",
     name: "Demo Polish",
-    versionRange: "v0.1.13 (hotfix wave)",
-    status: "in_progress",
+    versionRange: "v0.1.13",
+    status: "done",
     updates: [
       {
         id: "U-S05-01",
@@ -133,15 +133,29 @@ export const SPRINTS: Sprint[] = [
         kind: "milestone",
         text: "Sprint S0.5 открыт: 7 задач из транскрипта M-1, оценка 11.5–25h",
       },
+      {
+        id: "U-S05-03",
+        date: "2026-05-03",
+        kind: "deploy",
+        text: "Все 7 DM коммитнуты + bump v0.1.13 + tag pushed → GitHub Actions сборка запущена (Mac arm64/x64 + Windows .exe/.msi)",
+        prUrl: "https://github.com/mag8888/engiboard-desktop/actions",
+      },
+      {
+        id: "U-S05-04",
+        date: "2026-05-03",
+        kind: "milestone",
+        text: "Sprint S0.5 ЗАКРЫТ. Все 7 правок с демо-сессии 2026-05-01 — done за один заход.",
+      },
     ],
     tasks: [
       {
         id: "DM-1",
         priority: "DM",
-        status: "pending",
+        status: "done",
         title: "Перенести чат с правой стороны на левую",
         description: "Текущая реализация (B-16) — чат справа. Клиент: «чат слева» (явное решение).",
         estimateHours: [2, 4],
+        prUrl: "https://github.com/mag8888/engiboard-desktop/commit/73e168d",
         acceptance: [
           "Чат-панель занимает левую часть экрана",
           "Drag-to-reorder задач не сломан",
@@ -152,19 +166,21 @@ export const SPRINTS: Sprint[] = [
       {
         id: "DM-2",
         priority: "DM",
-        status: "pending",
+        status: "done",
         title: "Убрать дублирование имени пользователя (текст + аватар)",
         description: "Сейчас показывается и текст, и аватар — клиент считает избыточным.",
         estimateHours: [0.5, 1],
+        prUrl: "https://github.com/mag8888/engiboard-desktop/commit/4717d50",
         acceptance: ["Только аватар или только текст в начале сообщения"],
       },
       {
         id: "DM-3",
         priority: "DM",
-        status: "pending",
+        status: "done",
         title: "Сжать поле статуса + поле недели",
         description: "Сейчас занимают ~25% экрана. Сделать компактным, разместить над/под статусом.",
         estimateHours: [1, 3],
+        prUrl: "https://github.com/mag8888/engiboard-desktop/commit/d6bac5b",
         acceptance: [
           "Поле недели и статус занимают ≤8% экрана",
           "Информативность сохраняется",
@@ -174,24 +190,27 @@ export const SPRINTS: Sprint[] = [
       {
         id: "DM-4",
         priority: "DM",
-        status: "pending",
+        status: "done",
         title: "Сделать выбор проектов сворачиваемым",
         description:
           "При 20+ проектах постоянный список съедает рабочее пространство. Сворачивать/раскрывать по клику.",
         estimateHours: [2, 4],
+        prUrl: "https://github.com/mag8888/engiboard-desktop/commit/2509bdc",
         acceptance: [
           "Кнопка свёртки/разворота",
           "Состояние сохраняется в localStorage",
           "Smooth animation",
+          "+ Collapse all / Expand all buttons",
         ],
       },
       {
         id: "DM-5",
         priority: "DM",
-        status: "pending",
+        status: "done",
         title: "Убрать раскрытие задачи через 'коммент'",
         description: "Клиент: «Ни в коем случае». Чат только в превью-режиме или при прямом клике.",
         estimateHours: [1, 3],
+        prUrl: "https://github.com/mag8888/engiboard-desktop/commit/538036f",
         acceptance: [
           "Клик на коммент-иконке НЕ раскрывает задачу",
           "Чат открывается только из превью или по кнопке",
@@ -200,11 +219,12 @@ export const SPRINTS: Sprint[] = [
       {
         id: "DM-6",
         priority: "DM",
-        status: "pending",
+        status: "done",
         title: "Реализовать чат в превью-режиме (slideshow)",
         description:
           "Превью работает (B-18), но чат в нём не реализован. Roman обещал. Использует pin-систему B-17.",
         estimateHours: [4, 8],
+        prUrl: "https://github.com/mag8888/engiboard-desktop/commit/fa4d386",
         acceptance: [
           "Чат-панель видна в режиме slideshow",
           "Comments синхронизируются с lightbox pin-системой",
@@ -214,10 +234,11 @@ export const SPRINTS: Sprint[] = [
       {
         id: "DM-7",
         priority: "DM",
-        status: "pending",
+        status: "done",
         title: "Привести шрифты в порядок",
         description: "Косметика. Roman: «причешу». Клиент явно — не приоритет.",
         estimateHours: [1, 2],
+        prUrl: "https://github.com/mag8888/engiboard-desktop/commit/564571f",
         acceptance: [
           "Единая иерархия размеров (h1/h2/h3/body)",
           "Согласованные веса (400/500/600)",
