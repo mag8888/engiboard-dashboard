@@ -283,8 +283,8 @@ export const SPRINTS: Sprint[] = [
   {
     id: "S2",
     name: "Data Layer",
-    versionRange: "v0.1.15 → v0.1.18",
-    status: "in_progress",
+    versionRange: "deferred → v2.0",
+    status: "pending",
     updates: [
       {
         id: "U-S2-01",
@@ -304,19 +304,33 @@ export const SPRINTS: Sprint[] = [
         id: "U-S2-03",
         date: "2026-05-03",
         kind: "blocker",
-        text: "Step 3-6 заблокирован: anon-ключ не может выполнять DDL (CREATE/DROP TABLE). Нужен service_role / DB password / PAT от пользователя для применения миграций.",
+        text: "Step 3-6 заблокирован: anon-ключ не может выполнять DDL (CREATE/DROP TABLE).",
+      },
+      {
+        id: "U-S2-04",
+        date: "2026-05-03",
+        kind: "decision",
+        text: "ADR: пользователь дал sb_secret_* (admin Storage/CRUD), но обнаружено что в БД уже есть данные другого приложения (web app engiboard-deploy.vercel.app) с богатой engineering team схемой (role/department/checklist/cad_software). Конфликт моделей. RLS policies для Storage всё ещё требуют DDL.",
+      },
+      {
+        id: "U-S2-05",
+        date: "2026-05-03",
+        kind: "milestone",
+        text: "S2 ОТЛОЖЕН до v2.0 architectural decision. localStorage остаётся primary для desktop. См. supabase/ARCHITECTURE_DECISION.md в репо.",
+        prUrl: "https://github.com/mag8888/engiboard-desktop/blob/main/supabase/ARCHITECTURE_DECISION.md",
       },
     ],
     tasks: [
       {
         id: "P0-3",
         priority: "P0",
-        status: "in_progress",
-        title: "Real Supabase persistence (заменить localStorage)",
-        description: "5 таблиц (profiles, projects, tasks, comments, image_comments) + RLS + Storage. Step 1+2 done, step 3-6 ждут ключ от юзера.",
+        status: "blocked",
+        title: "Real Supabase persistence — DEFERRED to v2.0",
+        description: "Step 1+2 done (миграции написаны + JS client). Step 3-6 deferred: existing Supabase project уже занят web-app схемой (engineering team model). Конфликт моделей. См. ADR в репо.",
         estimateHours: [16, 24],
-        prUrl: "https://github.com/mag8888/engiboard-desktop/tree/main/supabase",
+        prUrl: "https://github.com/mag8888/engiboard-desktop/blob/main/supabase/ARCHITECTURE_DECISION.md",
         acceptance: [
+          "v2.0: architectural decision (isolated tables vs full schema unification)",
           "Двухустройственная синхронизация задач за <2 сек",
           "Logout → login → данные на месте",
           "Скрины >1 MB хранятся в Storage, не в БД",
