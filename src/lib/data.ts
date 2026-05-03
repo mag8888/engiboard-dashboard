@@ -1,5 +1,5 @@
 export type TaskStatus = "done" | "in_progress" | "pending" | "blocked" | "review";
-export type Priority = "P0" | "P1" | "P2" | "TD" | "L" | "B";
+export type Priority = "P0" | "P1" | "P2" | "TD" | "L" | "B" | "DM";
 
 export interface Task {
   id: string;
@@ -56,6 +56,9 @@ export interface Meeting {
   summary: string;
   decisions?: string[];
   promises?: string[];
+  inScopeCount?: number;
+  outOfScopeCount?: number;
+  movedToSprint?: string;
 }
 
 export const RELEASE = {
@@ -113,9 +116,120 @@ export const SPRINTS: Sprint[] = [
     ],
   },
   {
+    id: "S0.5",
+    name: "Demo Polish",
+    versionRange: "v0.1.13 (hotfix wave)",
+    status: "in_progress",
+    updates: [
+      {
+        id: "U-S05-01",
+        date: "2026-05-01",
+        kind: "decision",
+        text: "Демо-сессия выявила 7 правок UI/UX. Решено делать сразу как часть основной работы (не out-of-scope).",
+      },
+      {
+        id: "U-S05-02",
+        date: "2026-05-03",
+        kind: "milestone",
+        text: "Sprint S0.5 открыт: 7 задач из транскрипта M-1, оценка 11.5–25h",
+      },
+    ],
+    tasks: [
+      {
+        id: "DM-1",
+        priority: "DM",
+        status: "pending",
+        title: "Перенести чат с правой стороны на левую",
+        description: "Текущая реализация (B-16) — чат справа. Клиент: «чат слева» (явное решение).",
+        estimateHours: [2, 4],
+        acceptance: [
+          "Чат-панель занимает левую часть экрана",
+          "Drag-to-reorder задач не сломан",
+          "Resize высоты задач работает",
+          "Lightbox с pin-комментариями совместим",
+        ],
+      },
+      {
+        id: "DM-2",
+        priority: "DM",
+        status: "pending",
+        title: "Убрать дублирование имени пользователя (текст + аватар)",
+        description: "Сейчас показывается и текст, и аватар — клиент считает избыточным.",
+        estimateHours: [0.5, 1],
+        acceptance: ["Только аватар или только текст в начале сообщения"],
+      },
+      {
+        id: "DM-3",
+        priority: "DM",
+        status: "pending",
+        title: "Сжать поле статуса + поле недели",
+        description: "Сейчас занимают ~25% экрана. Сделать компактным, разместить над/под статусом.",
+        estimateHours: [1, 3],
+        acceptance: [
+          "Поле недели и статус занимают ≤8% экрана",
+          "Информативность сохраняется",
+          "Не пересекается с drag-region",
+        ],
+      },
+      {
+        id: "DM-4",
+        priority: "DM",
+        status: "pending",
+        title: "Сделать выбор проектов сворачиваемым",
+        description:
+          "При 20+ проектах постоянный список съедает рабочее пространство. Сворачивать/раскрывать по клику.",
+        estimateHours: [2, 4],
+        acceptance: [
+          "Кнопка свёртки/разворота",
+          "Состояние сохраняется в localStorage",
+          "Smooth animation",
+        ],
+      },
+      {
+        id: "DM-5",
+        priority: "DM",
+        status: "pending",
+        title: "Убрать раскрытие задачи через 'коммент'",
+        description: "Клиент: «Ни в коем случае». Чат только в превью-режиме или при прямом клике.",
+        estimateHours: [1, 3],
+        acceptance: [
+          "Клик на коммент-иконке НЕ раскрывает задачу",
+          "Чат открывается только из превью или по кнопке",
+        ],
+      },
+      {
+        id: "DM-6",
+        priority: "DM",
+        status: "pending",
+        title: "Реализовать чат в превью-режиме (slideshow)",
+        description:
+          "Превью работает (B-18), но чат в нём не реализован. Roman обещал. Использует pin-систему B-17.",
+        estimateHours: [4, 8],
+        acceptance: [
+          "Чат-панель видна в режиме slideshow",
+          "Comments синхронизируются с lightbox pin-системой",
+          "Можно писать новые комменты прямо из превью",
+        ],
+      },
+      {
+        id: "DM-7",
+        priority: "DM",
+        status: "pending",
+        title: "Привести шрифты в порядок",
+        description: "Косметика. Roman: «причешу». Клиент явно — не приоритет.",
+        estimateHours: [1, 2],
+        acceptance: [
+          "Единая иерархия размеров (h1/h2/h3/body)",
+          "Согласованные веса (400/500/600)",
+          "Не конфликтует с system-ui для drag-region",
+        ],
+      },
+    ],
+  },
+  {
     id: "S1",
     name: "Distribution Trust",
-    versionRange: "v0.1.13 → v0.1.14",
+    versionRange: "v0.1.14 → v0.1.15",
     status: "pending",
     tasks: [
       {
@@ -307,102 +421,28 @@ export const MEETINGS: Meeting[] = [
     date: "2026-05-01",
     participants: ["Roman", "Anton", "Dmitry"],
     summary:
-      "Демо десктоп-приложения. Roman показал реализацию, Anton + Dmitry дали развёрнутую обратную связь по UI/UX. 7 запросов на изменение — все вне ТЗ §15.",
+      "Демо десктоп-приложения. Anton + Dmitry дали развёрнутую обратную связь по UI/UX. 7 запросов на изменение классифицированы как minor → решено сделать как часть основной работы (Sprint S0.5 Demo Polish).",
     decisions: [
       "Чат — слева, не справа",
       "Функция раскрытия задачи через 'коммент' отменяется — «Ни в коем случае»",
       "Выбор проектов убирается с постоянного отображения — сворачиваемый",
       "Поле недели/ID — маленькое, над/под статусом",
+      "Все 7 правок — как minor в основной скоп (S0.5), не доп.договор",
     ],
     promises: [
       "Roman: реализую чат в превью-режиме",
       "Roman: причешу шрифты",
       "Антон: после подтверждения Дмитрия подготовлю финальную версию договора",
     ],
+    inScopeCount: 7,
+    outOfScopeCount: 0,
+    movedToSprint: "S0.5",
   },
 ];
 
-export const OUT_OF_SCOPE: OutOfScopeItem[] = [
-  {
-    id: "OOS-01",
-    title: "Перенести чат с правой стороны на левую",
-    description:
-      "Решение клиента на демо. Текущая реализация (B-16) — чат справа. Требует UI redesign + проверка drag-and-drop совместимости.",
-    relatedTzItem: "B-16",
-    category: "ui",
-    source: "Демо-сессия 2026-05-01 (Anton + Dmitry)",
-    meetingId: "M-1",
-    raisedAt: "2026-05-01",
-    status: "pending_estimate",
-  },
-  {
-    id: "OOS-02",
-    title: "Убрать дублирование имени пользователя (текст + аватар)",
-    description: "Сейчас показывается и текст, и аватар — клиент считает избыточным. UI cleanup.",
-    relatedTzItem: "B-16",
-    category: "ui",
-    source: "Демо-сессия 2026-05-01",
-    meetingId: "M-1",
-    raisedAt: "2026-05-01",
-    status: "pending_estimate",
-  },
-  {
-    id: "OOS-03",
-    title: "Сжать поле статуса + поле недели",
-    description: "Сейчас занимают ~25% экрана. Сделать компактным, разместить над/под статусом.",
-    relatedTzItem: "B-13",
-    category: "ui",
-    source: "Демо-сессия 2026-05-01",
-    meetingId: "M-1",
-    raisedAt: "2026-05-01",
-    status: "pending_estimate",
-  },
-  {
-    id: "OOS-04",
-    title: "Выбор проектов — сворачиваемый, не постоянное отображение",
-    description:
-      "При 20+ проектах постоянный список съедает рабочее пространство. Сворачивать/раскрывать по клику.",
-    relatedTzItem: "B-11",
-    category: "ux",
-    source: "Демо-сессия 2026-05-01",
-    meetingId: "M-1",
-    raisedAt: "2026-05-01",
-    status: "pending_estimate",
-  },
-  {
-    id: "OOS-05",
-    title: "Убрать раскрытие задачи через 'коммент'",
-    description:
-      "Клиент: «Ни в коем случае». Чат только в превью-режиме или при прямом клике. Удаление поведения + рефакторинг.",
-    category: "removal",
-    source: "Демо-сессия 2026-05-01",
-    meetingId: "M-1",
-    raisedAt: "2026-05-01",
-    status: "pending_estimate",
-  },
-  {
-    id: "OOS-06",
-    title: "Реализовать чат в превью-режиме (slideshow)",
-    description:
-      "Превью работает (B-18), но чат в нём не реализован. Roman обещал. Расширяет slideshow + связано с P1-3 Real-time chat.",
-    relatedTzItem: "B-18",
-    category: "feature",
-    source: "Демо-сессия 2026-05-01 — обещание Roman",
-    meetingId: "M-1",
-    raisedAt: "2026-05-01",
-    status: "pending_estimate",
-  },
-  {
-    id: "OOS-07",
-    title: "Привести шрифты в порядок (косметика)",
-    description: "Клиент явно обозначил как cosmetic, не в приоритете. Roman: «Шрифты я причешу».",
-    category: "cosmetic",
-    source: "Демо-сессия 2026-05-01 — обещание Roman",
-    meetingId: "M-1",
-    raisedAt: "2026-05-01",
-    status: "pending_estimate",
-  },
-];
+// Все 7 запросов с демо-сессии M-1 перенесены в Sprint S0.5 Demo Polish (in-scope).
+// OUT_OF_SCOPE остаётся для будущих запросов клиента, которые НЕ войдут в основной договор.
+export const OUT_OF_SCOPE: OutOfScopeItem[] = [];
 
 export function computeStats(sprints: Sprint[]) {
   const all = sprints.flatMap((s) => s.tasks);

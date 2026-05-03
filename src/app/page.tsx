@@ -33,6 +33,7 @@ const PRIORITY_META: Record<string, { label: string; cls: string }> = {
   TD: { label: "TD", cls: "bg-violet-500/15 text-violet-300 border-violet-500/30" },
   L: { label: "L", cls: "bg-cyan-500/15 text-cyan-300 border-cyan-500/30" },
   B: { label: "✓", cls: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" },
+  DM: { label: "DM", cls: "bg-pink-500/15 text-pink-300 border-pink-500/30" },
 };
 
 const CATEGORY_META: Record<OosCategory, { label: string; cls: string }> = {
@@ -168,6 +169,9 @@ export default function Dashboard() {
         </div>
       </header>
 
+      {/* Stages overview strip */}
+      <StagesOverview />
+
       {/* Body — 2 column layout */}
       <div className="max-w-7xl mx-auto w-full px-6 py-8 grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6">
         {/* Sprints column */}
@@ -199,9 +203,8 @@ export default function Dashboard() {
 
               <ul className="space-y-2">
                 {MEETINGS.map((m) => {
-                  const items = oosItems.filter((it) => it.meetingId === m.id);
-                  const inTz = 0; // computed: пока все 7 = вне ТЗ
-                  const outTz = items.length;
+                  const inTz = m.inScopeCount ?? 0;
+                  const outTz = m.outOfScopeCount ?? oosItems.filter((it) => it.meetingId === m.id).length;
                   return (
                     <li key={m.id} className="rounded-md border border-[var(--border)] bg-[var(--surface-elevated)] p-2.5">
                       <div className="flex justify-between gap-2 mb-1">
@@ -210,7 +213,7 @@ export default function Dashboard() {
                       </div>
                       <p className="text-xs font-medium leading-snug mb-1">{m.title}</p>
                       <p className="text-[10px] text-zinc-500 mb-2">{m.participants.join(" · ")}</p>
-                      <div className="flex gap-1.5 text-[10px] font-mono">
+                      <div className="flex gap-1.5 text-[10px] font-mono flex-wrap">
                         <span className="px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                           {inTz} in ТЗ
                         </span>
@@ -218,6 +221,17 @@ export default function Dashboard() {
                           {outTz} out-of-ТЗ
                         </span>
                       </div>
+                      {m.movedToSprint && (
+                        <p className="text-[10px] text-zinc-500 mt-1.5">
+                          → перенесено в{" "}
+                          <a
+                            href={`#sprint-${m.movedToSprint.replace(".", "_")}`}
+                            className="text-cyan-400 hover:text-cyan-300 font-mono"
+                          >
+                            {m.movedToSprint}
+                          </a>
+                        </p>
+                      )}
                     </li>
                   );
                 })}
@@ -328,6 +342,75 @@ export default function Dashboard() {
   );
 }
 
+function StagesOverview() {
+  const totals = SPRINTS.map((s) => {
+    const stats = computeSprintStats(s);
+    return { sprint: s, ...stats };
+  });
+  const completedSprints = totals.filter((t) => t.percent === 100).length;
+  return (
+    <section className="border-b border-[var(--border)] bg-[var(--surface)]/40">
+      <div className="max-w-7xl mx-auto px-6 py-4">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-xs uppercase tracking-wide font-semibold text-zinc-400">
+            📐 Stages overview · % по этапам
+          </h2>
+          <span className="text-[11px] text-zinc-500 font-mono">
+            {completedSprints} / {SPRINTS.length} спринтов завершено
+          </span>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-5 lg:grid-cols-10 gap-2">
+          {totals.map(({ sprint, percent, done, total }) => {
+            const isDone = percent === 100;
+            const isInProgress = sprint.status === "in_progress";
+            return (
+              <a
+                key={sprint.id}
+                href={`#sprint-${sprint.id.replace(".", "_")}`}
+                className={cn(
+                  "rounded-md border p-2 text-xs transition hover:border-cyan-500/50 group",
+                  isDone
+                    ? "border-emerald-500/30 bg-emerald-500/5"
+                    : isInProgress
+                    ? "border-cyan-500/30 bg-cyan-500/5"
+                    : "border-[var(--border)] bg-[var(--surface)]"
+                )}
+              >
+                <div className="flex justify-between items-baseline mb-0.5">
+                  <span className="font-mono font-semibold text-zinc-200 text-[11px]">{sprint.id}</span>
+                  <span
+                    className={cn(
+                      "text-[10px] font-mono",
+                      isDone ? "text-emerald-400" : isInProgress ? "text-cyan-400" : "text-zinc-500"
+                    )}
+                  >
+                    {percent}%
+                  </span>
+                </div>
+                <div className="text-[10px] text-zinc-400 truncate mb-1.5" title={sprint.name}>
+                  {sprint.name}
+                </div>
+                <div className="h-1 bg-zinc-900 rounded overflow-hidden">
+                  <div
+                    className={cn(
+                      "h-full transition-all",
+                      isDone ? "bg-emerald-500" : "bg-gradient-to-r from-cyan-500 to-cyan-400"
+                    )}
+                    style={{ width: `${percent}%` }}
+                  />
+                </div>
+                <div className="text-[9px] text-zinc-500 font-mono mt-1">
+                  {done}/{total} · {sprint.versionRange.split("→")[0].trim()}
+                </div>
+              </a>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function SprintCard({
   sprint,
   expanded,
@@ -343,12 +426,14 @@ function SprintCard({
 }) {
   const stats = computeSprintStats(sprint);
   const isDone = sprint.status === "done";
+  const isInProgress = sprint.status === "in_progress";
 
   return (
     <div
+      id={`sprint-${sprint.id.replace(".", "_")}`}
       className={cn(
-        "rounded-xl border bg-[var(--surface)] overflow-hidden transition",
-        expanded ? "border-cyan-500/30" : "border-[var(--border)]",
+        "rounded-xl border bg-[var(--surface)] overflow-hidden transition scroll-mt-24",
+        expanded ? "border-cyan-500/30" : isInProgress ? "border-cyan-500/20" : "border-[var(--border)]",
         isDone && "opacity-95"
       )}
     >
@@ -370,6 +455,11 @@ function SprintCard({
             {isDone && (
               <span className="text-[10px] uppercase tracking-wide font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 rounded px-1.5 py-0.5">
                 done
+              </span>
+            )}
+            {isInProgress && (
+              <span className="text-[10px] uppercase tracking-wide font-bold text-cyan-400 bg-cyan-500/10 border border-cyan-500/30 rounded px-1.5 py-0.5 animate-pulse">
+                in progress
               </span>
             )}
           </div>
